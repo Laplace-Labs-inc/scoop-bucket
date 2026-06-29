@@ -1,0 +1,50 @@
+name: Update manifest
+
+# Receives the `laplace-release` dispatch fired by laplace-cloud's
+# release-publish.yml. The Scoop manifest (laplace.json) is generated in
+# laplace-cloud and uploaded to the public release, so this job just pulls it
+# into the bucket.
+on:
+  repository_dispatch:
+    types: [laplace-release]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag (e.g. v0.1.0-alpha-1-rc.2)
+        required: true
+      version:
+        description: Version without leading v
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch manifest from public release
+        env:
+          TAG: ${{ github.event.client_payload.tag || inputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p bucket
+          curl -fsSL \
+            "https://github.com/Laplace-Labs-inc/laplace/releases/download/${TAG}/laplace.json" \
+            -o bucket/laplace.json
+          # sanity: must be valid JSON
+          python3 -c "import json,sys; json.load(open('bucket/laplace.json'))"
+
+      - name: Commit and push
+        env:
+          VERSION: ${{ github.event.client_payload.version || inputs.version }}
+        run: |
+          set -euo pipefail
+          git config user.name "laplace-release-bot"
+          git config user.email "release-bot@laplace-labs.com"
+          git add bucket/laplace.json
+          git diff --cached --quiet && { echo "no changes"; exit 0; }
+          git commit -m "laplace ${VERSION}"
+          git push
