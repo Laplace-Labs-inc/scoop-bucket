@@ -2,7 +2,7 @@
   "version": "0.1.0-alpha-1-rc.4",
   "description": "Laplace CLI",
   "homepage": "https://github.com/Laplace-Labs-inc/laplace-cloud",
-  "license": "Apache-2.0",
+  "license": "MIT",
   "architecture": {
     "64bit": {
       "url": "https://github.com/Laplace-Labs-inc/laplace/releases/download/v0.1.0-alpha-1-rc.4/laplace-cli-x86_64-pc-windows-msvc.zip",
